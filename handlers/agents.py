@@ -72,7 +72,7 @@ async def func_zero(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.answer('Работает функция добавления счетичка')
     logger.info(f'{callback.from_user.first_name} {callback.from_user.last_name} {callback.from_user.id}'
-                f' номер прибора учета не найден{callback.data}')
+                f' номер прибора учета  не найден{callback.data}')
 
 
 @router.callback_query(Zone.meter_nomer)
