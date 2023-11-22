@@ -28,7 +28,7 @@ async def cmd_cancel(message: Message, state: FSMContext):
 
 
 @router.message(Zone.fhoto1, ~F.photo)
-async def incorrect_photo(message: Message):
+async def incorrect_photo1(message: Message):
     """Функция проверяет корректность фото соответствующего тарифа"""
     await message.answer("Вы отправили не фото прибора учета, отправьте корректное фото")
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
@@ -36,7 +36,7 @@ async def incorrect_photo(message: Message):
 
 
 @router.message(Zone.fhoto2, ~F.photo)
-async def incorrect_photo(message: Message):
+async def incorrect_photo2(message: Message):
     """Функция проверяет корректность фото соответствующего тарифа"""
     await message.answer("Вы отправили не фото прибора учета, отправьте корректное фото")
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
@@ -44,7 +44,7 @@ async def incorrect_photo(message: Message):
 
 
 @router.message(Zone.fhoto3, ~F.photo)
-async def incorrect_photo(message: Message):
+async def incorrect_photo3(message: Message):
     """Функция проверяет корректность фото соответствующего тарифа"""
     await message.answer("Вы отправили не фото прибора учета, отправьте корректное фото")
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
@@ -101,7 +101,7 @@ async def get_fhoto1(message: Message, state: FSMContext):
     zone = len(get_meter_id(session, my_data['meter_nomer']))
     zones = get_meter_id(session, my_data['meter_nomer'])
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                f' зашел в второй стэйт  и показания {message.caption}')
+                f' зашел во второй стэйт, показания {message.caption}')
     if message.caption is not None:
         if zone == 1:
             await message.answer('Переходите к следующему счетчику')
@@ -134,7 +134,7 @@ async def get_fhoto2(message: Message, state: FSMContext):
     zones = get_meter_id(session, my_data['meter_nomer'])
     await state.update_data(photo2=[message.photo[-1].file_id, message.caption])
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                f' зашел в второй стэйт  и показания {message.caption}')
+                f' зашел в третий стэйт, показания {message.caption}')
     if message.caption is not None:
         if zone == 2:
             await message.answer('Переходите к следующему счетчику')
@@ -160,7 +160,7 @@ async def get_fhoto3(message: Message, state: FSMContext):
     if message.caption is not None:
         my_data = await state.get_data()
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' зашел в второй стэйт  и показания {message.caption}')
+                    f' зашел в четвертый стэйт, показания {message.caption}')
         save_counter(session, message.from_user.id, get_meter_id(session, my_data['meter_nomer'])[2][0],
                      my_data['photo3'][1], my_data['photo3'][0])
         await message.answer('Переходите к следующему счетчику')
