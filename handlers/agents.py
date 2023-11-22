@@ -22,7 +22,7 @@ class Zone(StatesGroup):
 async def cmd_cancel(message: Message, state: FSMContext):
     """Функция обработки команды отмена"""
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                f' нажал отмену')
+                f' нажал "/cancel"')
     await message.answer("Данные по последнему введенному прибору учета сброшены\nНачните с ввода номера")
     await state.clear()
 
@@ -32,7 +32,7 @@ async def incorrect_photo1(message: Message):
     """Функция проверяет корректность фото соответствующего тарифа"""
     await message.answer("Вы отправили не фото прибора учета, отправьте корректное фото")
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                f' ошибся в вводе фотографии подпись {message.caption}')
+                f' ошибся в вводе фотографии, подпись {message.caption}')
 
 
 @router.message(Zone.fhoto2, ~F.photo)
@@ -40,7 +40,7 @@ async def incorrect_photo2(message: Message):
     """Функция проверяет корректность фото соответствующего тарифа"""
     await message.answer("Вы отправили не фото прибора учета, отправьте корректное фото")
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                f' ошибся в вводе фотографии подпись {message.caption}')
+                f' ошибся в вводе фотографии, подпись {message.caption}')
 
 
 @router.message(Zone.fhoto3, ~F.photo)
@@ -48,7 +48,7 @@ async def incorrect_photo3(message: Message):
     """Функция проверяет корректность фото соответствующего тарифа"""
     await message.answer("Вы отправили не фото прибора учета, отправьте корректное фото")
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                f' ошибся в вводе фотографии подпись {message.caption}')
+                f' ошибся в вводе фотографии, подпись {message.caption}')
 
 
 @router.message(F.text.isdigit() & F.from_user.id.in_(set(get_agents(session))))
