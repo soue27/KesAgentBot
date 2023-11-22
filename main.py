@@ -2,11 +2,14 @@ import asyncio
 from aiogram import Dispatcher, Bot
 from data.config import TOKEN
 import logging
+from loguru import logger
 from handlers import user_start, load_data, agents, user, admins
 
 
 async def main():
     logging.basicConfig(level=logging.DEBUG)
+    logger.add("debug.log", format="{time} {level} {message}",
+               level="DEBUG", rotation="1 week", compression="zip")
     dp = Dispatcher()
     bot = Bot(TOKEN, parse_mode="HTML")
     dp.include_router(user_start.router)
