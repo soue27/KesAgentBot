@@ -4,7 +4,7 @@ from database.db import session, get_admins, save_worker
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
-
+from loguru import logger
 from keyboards.adminkb import admin_kb
 
 # Определение роутера для работы админа
@@ -24,8 +24,12 @@ async def cmd_admin(message: Message):
     """Функция обработки команды отмена"""
     if message.from_user.id in set(get_admins(session)):
         await message.answer("Выберите действие", reply_markup=admin_kb())
+        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                    f' зашел как админ')
     else:
         await message.answer("Вы не являетесь администратором")
+        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                    f' попытался зайти как админ')
 
 
 @router.callback_query(F.data == 'add_admin')
@@ -41,6 +45,8 @@ async def set_admin(message: Message, state: FSMContext):
     """Функция добавления номера ай ди админа из стейта"""
     if message.text.isdigit():
         save_worker(sesion=session, idd=int(message.text), admin=True)
+        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                    f' добавил админа {message.text}')
     await message.answer('администратор добавлен')
     await state.clear()
 
@@ -58,5 +64,7 @@ async def set_admin(message: Message, state: FSMContext):
     """Функция добавления номера ай ди агента из стейта"""
     if message.text.isdigit():
         save_worker(sesion=session, idd=int(message.text), admin=False)
+        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                    f' добавил агента {message.text}')
     await message.answer('агент добавлен')
     await state.clear()

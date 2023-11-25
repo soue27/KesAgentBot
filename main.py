@@ -12,11 +12,11 @@ async def main():
                level="DEBUG", rotation="1 week", compression="zip")
     dp = Dispatcher()
     bot = Bot(TOKEN, parse_mode="HTML")
-    dp.include_router(user_start.router)
     dp.include_router(load_data.router)
     dp.include_router(agents.router)
     dp.include_router(admins.router)
     dp.include_router(user.router)
+    dp.include_router(user_start.router)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
