@@ -3,7 +3,7 @@ import os
 from aiogram import Router, F, types, Bot
 from aiogram.client import bot
 from aiogram.fsm.context import FSMContext
-from database.db import session, get_admins, save_worker, get_data
+from database.db import session, get_admins, save_worker, get_data, get_data_for_agent
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
@@ -87,3 +87,12 @@ async def upload(callback: types.CallbackQuery, bot: Bot):
     await bot.send_document(chat_id=callback.from_user.id, document=document)
     os.remove('files\\upload.xlsx')
 
+
+@router.callback_query(F.data == 'agent_stat')
+async def upload(callback: types.CallbackQuery, bot: Bot):
+    """Функция для выгрузки файлов с показаниями"""
+    await callback.answer('Файл готов')
+    get_data_for_agent(session)
+    document = FSInputFile('files\\agents.xlsx')
+    await bot.send_document(chat_id=callback.from_user.id, document=document)
+    os.remove('files\\agents.xlsx')
