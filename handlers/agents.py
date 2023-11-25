@@ -57,7 +57,6 @@ async def incorrect_photo3(message: Message):
 async def agents_work(message: Message, state: FSMContext):
     """Функция обработки ввода номера ПУ"""
     metersid, count = find_meter_by_nomer(session, message.text)
-    print(f'*****************{set(get_agents(session))}')
     if count > 7:
         await message.answer('найдено более 7 приборов учета \n Введите больше цифр номера')
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'

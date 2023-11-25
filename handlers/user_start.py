@@ -17,6 +17,5 @@ async def command_start(message: Message):
         await message.answer('Вы админ')
     elif message.from_user.id in list(get_agents(session)):
         await message.answer('Вы агент.\nВведите номер прибора учета(можно не полностью)')
-        print(f'--------{get_agents(session)}')
     else:
         await message.answer('Вы потребитель электрической энергии \nВведите номер лицевого счета')

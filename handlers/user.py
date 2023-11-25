@@ -13,12 +13,9 @@ router = Router(name='user')
 # , not IsAdmin, not IsAgent
 
 
-@router.message(F.text.isdigit())
+@router.message(F.text.isdigit(), ~IsAgent(), ~IsAdmin())
 async def user_work(message: Message, state: FSMContext):
-    """Функция обработки ввода номера ПУ"""
-    if message.from_user.id in set(get_agents(session)):
-        print('ай ди агентах')
-    print(set(get_agents(session)))
+    """Функция обработки ввода номера ПУ для простых потребителей"""
     await message.answer('Вы простой потребитель, введите номер прибора учета')
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' зашел как потребитель')

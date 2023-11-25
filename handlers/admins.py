@@ -1,10 +1,18 @@
-from aiogram import Router, F, types
+import os
+
+from aiogram import Router, F, types, Bot
+from aiogram.client import bot
 from aiogram.fsm.context import FSMContext
-from database.db import session, get_admins, save_worker
+from database.db import session, get_admins, save_worker, get_data
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
 from loguru import logger
+from aiogram.methods import SendDocument
+from aiogram.types.input_file import FSInputFile
+
+
+from filters.filters import IsAdmin
 from keyboards.adminkb import admin_kb
 
 # Определение роутера для работы админа
@@ -19,17 +27,17 @@ class Agent(StatesGroup):
     agent_id = State()
 
 
-@router.message(Command("admin"))
+@router.message(Command("admin"), IsAdmin())
 async def cmd_admin(message: Message):
-    """Функция обработки команды отмена"""
-    if message.from_user.id in set(get_admins(session)):
-        await message.answer("Выберите действие", reply_markup=admin_kb())
-        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' зашел как админ')
-    else:
-        await message.answer("Вы не являетесь администратором")
-        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' попытался зайти как админ')
+    """функция обработки команды admin"""
+    # if message.from_user.id in set(get_admins(session)):
+    await message.answer("Выберите действие", reply_markup=admin_kb())
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' зашел как админ')
+    # else:
+    #     await message.answer("Вы не являетесь администратором")
+    #     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+    #                 f' попытался зайти как админ')
 
 
 @router.callback_query(F.data == 'add_admin')
@@ -68,3 +76,14 @@ async def set_admin(message: Message, state: FSMContext):
                     f' добавил агента {message.text}')
     await message.answer('агент добавлен')
     await state.clear()
+
+
+@router.callback_query(F.data == 'upload')
+async def upload(callback: types.CallbackQuery, bot: Bot):
+    """Функция для выгрузки файлов с показаниями"""
+    await callback.answer('Файл готов')
+    get_data(session)
+    document = FSInputFile('files\\upload.xlsx')
+    await bot.send_document(chat_id=callback.from_user.id, document=document)
+    os.remove('files\\upload.xlsx')
+
