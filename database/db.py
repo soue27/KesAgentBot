@@ -155,5 +155,6 @@ def get_data_for_agent(sesion: Session):
     with sesion as ses:
         stmt = stmt = sesion.query(Worker.id).join(MeterData).all()
         data = pd.DataFrame(stmt)
+        print(data)
         data.to_excel('files\\agent.xlsx', index=False)
 
