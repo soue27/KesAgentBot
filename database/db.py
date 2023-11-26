@@ -142,17 +142,6 @@ def load_data(filename: str, conn) -> int:
 
 def get_data(sesion: Session):
     with sesion as ses:
-        stmt = sesion.query(Catalog.contract_id, Catalog.tu_code, Catalog.meter_id, Catalog.zone, MeterData.counter,
-                            MeterData.counter_date).join(Catalog).all()
-        # for meterData, catalog in stmt:
-        #     print(meterData)
-        #     print(catalog)
-        data = pd.DataFrame(stmt)
-        data.to_excel('files\\upload.xlsx', index=False)
-
-
-def get_data_for_agent(sesion: Session):
-    with sesion as ses:
         # stmt = sesion.query(Worker.id, Worker.tg_id, MeterData.meter_id, MeterData.counter,
         #                     MeterData.counter_date).join(MeterData).order_by(Worker.tg_id).all()
         # stmt = session.query(Worker.id, Worker.tg_id, MeterData.meter_id, MeterData.counter,
@@ -165,6 +154,6 @@ def get_data_for_agent(sesion: Session):
                              MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
                              Catalog, MeterData.meter_id == Catalog.id).all()
         data = pd.DataFrame(stmt)
-        print(data.filter())
-        data.to_excel('files\\agents.xlsx', index=False)
+        print(data)
+        data.to_excel('files\\upload.xlsx', index=False)
 
