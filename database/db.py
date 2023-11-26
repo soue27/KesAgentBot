@@ -3,7 +3,7 @@ import os
 from typing import Any
 
 from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from database.models import Base, Worker, Catalog, MeterData
 from data.config import DB_URL, ECHO
 import pandas as pd
@@ -153,8 +153,18 @@ def get_data(sesion: Session):
 
 def get_data_for_agent(sesion: Session):
     with sesion as ses:
-        stmt = stmt = sesion.query(Worker.id).join(MeterData).all()
+        # stmt = sesion.query(Worker.id, Worker.tg_id, MeterData.meter_id, MeterData.counter,
+        #                     MeterData.counter_date).join(MeterData).order_by(Worker.tg_id).all()
+        # stmt = session.query(Worker.id, Worker.tg_id, MeterData.meter_id, MeterData.counter,
+        #                      MeterData.counter_date, Catalog.contract_id, Catalog.tu_code, Catalog.name,
+        #                      Catalog.address,
+        #                      Catalog.meter_id, Catalog.zone).join(MeterData, Worker.id == MeterData.agent_id).join(
+        #     Catalog, MeterData.meter_id == Catalog.id).all()
+        stmt = session.query(Worker.id, Worker.tg_id, Catalog.name, Catalog.contract_id, Catalog.tu_code,
+                             Catalog.address, Catalog.meter_id, Catalog.zone, MeterData.counter,
+                             MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
+                             Catalog, MeterData.meter_id == Catalog.id).all()
         data = pd.DataFrame(stmt)
-        print(data)
-        data.to_excel('files\\agent.xlsx', index=False)
+        print(data.filter())
+        data.to_excel('files\\agents.xlsx', index=False)
 
