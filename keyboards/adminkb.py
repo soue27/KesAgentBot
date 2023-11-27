@@ -12,3 +12,11 @@ def admin_kb() -> InlineKeyboardMarkup:
     builder.row(InlineKeyboardButton(text='Сделать выгрузку показаний', callback_data="upload"))
     builder.row(InlineKeyboardButton(text='Резерв', callback_data="reserv"))
     return builder.as_markup(one_time_keyboard=True)
+
+
+def search_kb() -> InlineKeyboardMarkup:
+    """Функция создания клавиатуры для выбора способа поиска фотографии из базы данных"""
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text='По номеру счетчика', callback_data="by_number"))
+    builder.row(InlineKeyboardButton(text='По номеру договора', callback_data="by_contract"))
+    return builder.as_markup(one_time_keyboard=True)

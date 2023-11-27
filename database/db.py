@@ -1,4 +1,5 @@
 """Модуль для работы с базой данных """
+import datetime
 import os
 from typing import Any
 
@@ -107,12 +108,17 @@ def save_counter(sesion: Session, idd: int, number: int, pokazanie: str, photo_n
             agent_id=get_agent_id(session, idd),
             meter_id=number,
             counter=pokazanie,
+            counter_date=datetime.date.today(),
             photo_id=photo_nomer)
         session.add(count)
         sesion.commit()
 
 
 def save_worker(sesion: Session, idd: int, admin: bool) -> None:
+    """Функция записи агента или админа в базу данных
+                        :param sesion - текущая сессия для работы с БД
+                        :param idd - телеграмм ай ди агента
+                        :param admin - True если работник является админом"""
     with sesion as ses:
         worker = Worker(
             tg_id=idd,
@@ -141,14 +147,9 @@ def load_data(filename: str, conn) -> int:
 
 
 def get_data(sesion: Session):
+    """Функция производит выгрузку данных из базы данных для передачи в сбыт и расчетам с агентами
+                :param sesion - текущая сессия для работы с БД"""
     with sesion as ses:
-        # stmt = sesion.query(Worker.id, Worker.tg_id, MeterData.meter_id, MeterData.counter,
-        #                     MeterData.counter_date).join(MeterData).order_by(Worker.tg_id).all()
-        # stmt = session.query(Worker.id, Worker.tg_id, MeterData.meter_id, MeterData.counter,
-        #                      MeterData.counter_date, Catalog.contract_id, Catalog.tu_code, Catalog.name,
-        #                      Catalog.address,
-        #                      Catalog.meter_id, Catalog.zone).join(MeterData, Worker.id == MeterData.agent_id).join(
-        #     Catalog, MeterData.meter_id == Catalog.id).all()
         stmt = session.query(Worker.id, Worker.tg_id, Catalog.name, Catalog.contract_id, Catalog.tu_code,
                              Catalog.address, Catalog.meter_id, Catalog.zone, MeterData.counter,
                              MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
@@ -157,3 +158,24 @@ def get_data(sesion: Session):
         print(data)
         data.to_excel('files\\upload.xlsx', index=False)
 
+
+def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
+    """Функция возвращает фото по ай ди прибора учета
+                :param sesion - текущая сессия для работы с БД
+                :param nomer - номер прибора учета полностью или частично
+                :param isnomer - номер прибора учета полностью
+                """
+    with sesion as ses:
+        # stmt = select(Catalog.id).select_from(Catalog).where(Catalog.meter_id == nomer)
+        my_photo = []
+        if isnomer:
+            stmt = select(Catalog.id).where(Catalog.meter_id == nomer)
+        else:
+            stmt = select(Catalog.id).where(Catalog.contract_id == nomer)
+        for nomer in sesion.scalars(stmt).fetchall():
+            stmt = select(MeterData.photo_id, MeterData.counter_date).select_from(MeterData).where(MeterData.meter_id == nomer)
+            # my_photo.append(sesion.execute(stmt).all())
+            my_photo.append(sesion.execute(stmt).all())
+        # print(sesion.scalars(stmt).fetchall())
+        # print(my_photo)
+        return my_photo
