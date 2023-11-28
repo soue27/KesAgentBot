@@ -65,3 +65,20 @@ class MeterData(Base):
 
     def __repr__(self) -> str:
         return str(self)
+
+
+class LostMeter(Base):
+    """Класс для описания сбора показаний"""
+    __tablename__ = 'lostmeters'
+    meter_id: Mapped[int] = mapped_column(String(20))
+    counter1: Mapped[int] = mapped_column(String(20), default='-1')
+    counter2: Mapped[str] = mapped_column(String(20), default='-1')
+    counter3: Mapped[str] = mapped_column(String(20), default='-1')
+    counter_date: Mapped[Date] = mapped_column(Date, default=datetime.date.today())
+
+    def __str__(self):
+        return (f'LostMeter(id={self.id!r}, meter_id={self.meter_id!r}, counter={self.counter1!r}, '
+                f' counter={self.counter2!r}, counter={self.counter3!r},counter_date:={self.counter_date:!r},')
+
+    def __repr__(self) -> str:
+        return str(self)

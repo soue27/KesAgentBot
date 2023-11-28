@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, aliased
-from database.models import Base, Worker, Catalog, MeterData
+from database.models import Base, Worker, Catalog, MeterData, LostMeter
 from data.config import DB_URL, ECHO
 import pandas as pd
 
@@ -127,6 +127,28 @@ def save_worker(sesion: Session, idd: int, admin: bool) -> None:
         sesion.commit()
 
 
+def save_lost(sesion: Session, data: list) -> bool:
+    """Функция записи не найденного счетчика в базу данных
+                            :param sesion - текущая сессия для работы с БД
+                            :param data - словарь с данными счетчика"""
+    with sesion as ses:
+        match len(data):
+            case 2:
+                lost = LostMeter(meter_id=data[0], counter1=data[1], counter_date=datetime.date.today())
+            case 3:
+                lost = LostMeter(meter_id=data[0], counter1=data[1], counter2=data[2], counter_date=datetime.date.today())
+            case 4:
+                lost = LostMeter(meter_id=data[0], counter1=data[1], counter2=data[2], counter3=data[2],
+                                 counter_date=datetime.date.today())
+            case _:
+                sesion.commit()
+                return False
+        session.add(lost)
+        sesion.commit()
+        return True
+
+
+
 def load_data(filename: str, conn) -> int:
     """Функция производит загрузку данных из файла excel загруженного в бот
     и возвращает количество загруженных строк, что позволяет судить о правильности загрузки
@@ -155,7 +177,6 @@ def get_data(sesion: Session):
                              MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
                              Catalog, MeterData.meter_id == Catalog.id).all()
         data = pd.DataFrame(stmt)
-        print(data)
         data.to_excel('files\\upload.xlsx', index=False)
 
 
@@ -166,7 +187,6 @@ def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
                 :param isnomer - номер прибора учета полностью
                 """
     with sesion as ses:
-        # stmt = select(Catalog.id).select_from(Catalog).where(Catalog.meter_id == nomer)
         my_photo = []
         if isnomer:
             stmt = select(Catalog.id).where(Catalog.meter_id == nomer)
@@ -176,6 +196,4 @@ def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
             stmt = select(MeterData.photo_id, MeterData.counter_date).select_from(MeterData).where(MeterData.meter_id == nomer)
             # my_photo.append(sesion.execute(stmt).all())
             my_photo.append(sesion.execute(stmt).all())
-        # print(sesion.scalars(stmt).fetchall())
-        # print(my_photo)
         return my_photo

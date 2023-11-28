@@ -1,7 +1,7 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from loguru import logger
-from database.db import session, get_agents, get_meter_id, save_counter, find_meter_by_nomer
+from database.db import session, get_agents, get_meter_id, save_counter, find_meter_by_nomer, save_lost
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
@@ -18,6 +18,10 @@ class Zone(StatesGroup):
     fhoto1 = State()
     fhoto2 = State()
     fhoto3 = State()
+
+
+class LostMeter(StatesGroup):
+    lost_data = State()
 
 
 @router.message(Command("cancel"))
@@ -69,10 +73,13 @@ async def agents_work(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == '0')
-async def func_zero(callback: types.CallbackQuery):
+async def func_zero(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки добавления счетчика, если не обнаружен в базе"""
     await callback.message.delete()
-    await callback.message.answer('Работает функция добавления счетичка')
+    await callback.message.answer('Введите информацию о потерянном счетчике\n'
+                                  'Номер Счетчика, показания  всех тарифов через пробел\n'
+                                  '014589622656 4589.5 3546.6 7896.6')
+    await state.set_state(LostMeter.lost_data)
     logger.info(f'{callback.from_user.first_name} {callback.from_user.last_name} {callback.from_user.id}'
                 f' номер прибора учета  не найден{callback.data}')
 
@@ -170,3 +177,18 @@ async def get_fhoto3(message: Message, state: FSMContext):
     else:
         await message.answer('Вы не ввели показания, как попдись к фотографии \n'
                              'Попробуйте отправить фотографию еще раз\nОбязательно с подписью')
+
+
+@router.message(LostMeter.lost_data)
+async def save_lost_data(message: Message, state: FSMContext):
+    """Функция добавления потерянного прибора учета из стейта"""
+    data = message.text.split(' ')
+    if save_lost(session, data=data):
+        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                    f' добавил потерянный счетчик {data}')
+        await message.answer('Счетчик записан в базу данных для поиска')
+        await state.clear()
+    else:
+        await message.answer('Какая то ошибка в данных, попробуйте еще раз')
+        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                    f' ошибся в данных при вводе потеряшки {data}')
