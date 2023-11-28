@@ -1,7 +1,7 @@
-from aiogram import Router, F, types
+from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
 from loguru import logger
-from database.db import session, get_agents, get_meter_id, save_counter, find_meter_by_nomer, save_lost
+from database.db import session, get_agents, get_meter_id, save_counter, find_meter_by_nomer, save_lost, get_admins
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
@@ -76,9 +76,9 @@ async def agents_work(message: Message, state: FSMContext):
 async def func_zero(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки добавления счетчика, если не обнаружен в базе"""
     await callback.message.delete()
-    await callback.message.answer('Введите информацию о потерянном счетчике\n'
-                                  'Номер Счетчика, показания  всех тарифов через пробел\n'
-                                  '014589622656 4589.5 3546.6 7896.6')
+    await callback.message.answer('Введите информацию о не найденном счетчике:\n'
+                                  'Номер ПУ, показания, адрес, собственник\n'
+                                  'В свободном виде')
     await state.set_state(LostMeter.lost_data)
     logger.info(f'{callback.from_user.first_name} {callback.from_user.last_name} {callback.from_user.id}'
                 f' номер прибора учета  не найден{callback.data}')
@@ -180,15 +180,22 @@ async def get_fhoto3(message: Message, state: FSMContext):
 
 
 @router.message(LostMeter.lost_data)
-async def save_lost_data(message: Message, state: FSMContext):
+async def save_lost_data(message: Message, state: FSMContext, bot: Bot):
     """Функция добавления потерянного прибора учета из стейта"""
     data = message.text.split(' ')
-    if save_lost(session, data=data):
-        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' добавил потерянный счетчик {data}')
-        await message.answer('Счетчик записан в базу данных для поиска')
-        await state.clear()
-    else:
-        await message.answer('Какая то ошибка в данных, попробуйте еще раз')
-        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' ошибся в данных при вводе потеряшки {data}')
+    await bot.send_message(chat_id=get_admins(session)[0], text=message.text)
+    await message.answer('Данные переданы администратору \n'
+                         'для принятия дальнейшего решения \n'
+                         'Спасибо!')
+    await state.clear()
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' передал потерянный счетчик админу {data}')
+    # if save_lost(session, data=data):
+    #     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+    #                 f' добавил потерянный счетчик {data}')
+    #     await message.answer('Счетчик записан в базу данных для поиска')
+    #     await state.clear()
+    # else:
+    #     await message.answer('Какая то ошибка в данных, попробуйте еще раз')
+    #     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+    #                 f' ошибся в данных при вводе потеряшки {data}')
