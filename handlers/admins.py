@@ -129,12 +129,9 @@ async def set_admin(message: Message, state: FSMContext, bot: Bot):
         spisok = get_photo(session, message.text, True)
         for item in spisok:
             if len(item) == 1:
-                print(f'id  {item[0][0]},   date   {item[0][1]}')
                 await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
             else:
                 for i in range(len(item)):
-                    # for j in range(len(item)):
-                    print(f'id  {item[i][0]},   date   {item[i][1]}')
                     await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
             # await SendPhoto(chat_id=message.chat.id, photo='file_id', caption='Описание фотки')
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'

@@ -31,7 +31,6 @@ def check_agent(sesion: Session, idd: int) -> bool | None:
         :param idd - Телеграм ай ди пользователя"""
     with sesion as ses:
         stmt = select(Worker.is_admin).where(Worker.tg_id == idd)
-        print(sesion.scalar(stmt))
         return not sesion.scalar(stmt)
 
 
@@ -49,14 +48,12 @@ def get_agents(sesion: Session) -> Any:
         """
     with sesion as ses:
         stmt = select(Worker.tg_id).where(Worker.is_admin == False)
-    # print(sesion.scalars(stmt).fetchall())
         return sesion.scalars(stmt).fetchall()
 
 
 def get_agent_id(sesion: Session, idd: int):
     with sesion as ses:
         stmt = select(Worker.id).where(Worker.tg_id == idd)
-    # print(sesion.scalar(stmt))
         return sesion.scalar(stmt)
 
 
@@ -80,7 +77,6 @@ def get_meter_id(sesion: Session, nomer: str) -> any:
                 """
     with sesion as ses:
         stmt = select(Catalog.id, Catalog.zone).select_from(Catalog).where(Catalog.meter_id == nomer)
-        # print(sesion.scalars(stmt).fetchall())
         return sesion.execute(stmt).fetchall()
 
 
@@ -92,7 +88,6 @@ def get_meter_id_by_nomer_zone(sesion: Session, nomer: str, zone: str) -> int:
                     """
     with sesion as ses:
         stmt = select(Catalog.id).select_from(Catalog).where((Catalog.meter_id == nomer) & (Catalog.zone == zone))
-    # print(sesion.scalars(stmt).fetchall())
         return sesion.scalar(stmt)
 
 

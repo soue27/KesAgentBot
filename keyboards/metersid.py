@@ -7,7 +7,6 @@ def metersid_kb(nomer) -> InlineKeyboardMarkup:
     """Функция создания клавиатуры для выбора процесса работы бота"""
     builder = InlineKeyboardBuilder()
     metersid, count = find_meter_by_nomer(session, nomer)
-    print(count)
     if count == 0:
         builder.row(InlineKeyboardButton(text='Передайте информацию о счетчике администратору!', callback_data="0"))
         return builder.as_markup()
