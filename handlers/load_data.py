@@ -3,7 +3,7 @@ from aiogram import Router, F, Bot
 
 from database.db import session, get_admins, connect, load_data
 from aiogram.types import Message
-
+from loguru import logger
 from filters.filters import IsAdmin
 
 # Определение роутера для загрузки данных из файлов
@@ -21,3 +21,5 @@ async def load_dates(message: Message, bot: Bot):
     await bot.download_file(file_path, "files\\forload.xlsx")
     result = load_data("files\\forload.xlsx", connect)
     await message.answer(f'Загружено {result} строк')
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' загрузил данные по {result} строкам')

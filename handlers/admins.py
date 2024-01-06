@@ -1,4 +1,5 @@
 import os
+import datetime
 
 from aiogram import Router, F, types, Bot
 from aiogram.client import bot
@@ -33,6 +34,10 @@ class ByNumber(StatesGroup):
 
 class ByContract(StatesGroup):
     contract = State()
+
+
+class UploadDate(StatesGroup):
+    upload_date = State()
 
 
 @router.message(Command("admin"), IsAdmin())
@@ -86,15 +91,36 @@ async def set_admin(message: Message, state: FSMContext):
     await state.clear()
 
 
-@router.callback_query(F.data.in_({'upload', 'agent_stat'}))
-async def upload(callback: types.CallbackQuery, bot: Bot):
+@router.callback_query(F.data == 'current_upload')
+async def current_upload(callback: types.CallbackQuery, bot: Bot):
     """Функция для выгрузки файлов с показаниями"""
     await callback.answer('Файл готов')
-    get_data(session)
+    data = str(datetime.date.today().year) + "-" + str(datetime.date.today().month).zfill(2) + "-%"
+    get_data(session, data)
     document = FSInputFile('files\\upload.xlsx')
     await bot.send_document(chat_id=callback.from_user.id, document=document)
     logger.info(f'{callback.from_user.first_name} {callback.from_user.last_name} {callback.from_user.id}'
-                f' Сделал выгрузка показаний')
+                f' Сделал выгрузку текущих показаний')
+    os.remove('files\\upload.xlsx')
+
+
+@router.callback_query(F.data == 'upload')
+async def upload(callback: types.CallbackQuery, bot: Bot, state: FSMContext):
+    """Функция для выгрузки файлов с показаниями"""
+    await callback.message.delete()
+    await callback.message.answer('Введите год и месяц в формате: \n'
+                                  '2023-11,\n для выгрузки за ноябрь 2023г.')
+    await state.set_state(UploadDate.upload_date)
+
+
+@router.message(UploadDate.upload_date)
+async def set_admin(message: Message, state: FSMContext, bot: Bot):
+    upload_date = message.text + "-%"
+    get_data(session, upload_date)
+    document = FSInputFile('files\\upload.xlsx')
+    await bot.send_document(chat_id=message.from_user.id, document=document)
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' Сделал выгрузку показаний за {message.text}')
     os.remove('files\\upload.xlsx')
 
 

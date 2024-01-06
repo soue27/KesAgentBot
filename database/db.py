@@ -143,17 +143,17 @@ def save_lost(sesion: Session, data: list) -> bool:
         return True
 
 
-
-def load_data(filename: str, conn) -> int:
+def load_data(filename: str, conn: connect) -> int:
     """Функция производит загрузку данных из файла excel загруженного в бот
     и возвращает количество загруженных строк, что позволяет судить о правильности загрузки
             :param filename - полное имя файла excel для загрузки данных
             :param conn - connection к базе данных"""
     try:
         df = pd.read_excel(filename)
-        df.to_sql(name='catalogs', con=connect, if_exists='append', index=False)
-        connect.close()
+        print(df)
+        df.to_sql(name='catalogs', con=engine, if_exists='append', index=False)
         result = df.shape[0]
+        print(result)
         df = None
         os.remove(filename)
         return result
@@ -163,16 +163,23 @@ def load_data(filename: str, conn) -> int:
         return 0
 
 
-def get_data(sesion: Session):
-    """Функция производит выгрузку данных из базы данных для передачи в сбыт и расчетам с агентами
-                :param sesion - текущая сессия для работы с БД"""
+def get_data(sesion: Session, data: str):
+    """Функция производит выгрузку данных из базы данных для текущкего
+    месяца года для передачи в сбыт и расчетам с агентами
+                :param sesion - текущая сессия для работы с БД
+                :param data str - строка представления года и месяца"""
     with sesion as ses:
+        # stmt = session.query(Worker.id, Worker.tg_id, Catalog.name, Catalog.contract_id, Catalog.tu_code,
+        #                      Catalog.address, Catalog.meter_id, Catalog.zone, MeterData.counter,
+        #                      MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
+        #                      Catalog, MeterData.meter_id == Catalog.id).all()
         stmt = session.query(Worker.id, Worker.tg_id, Catalog.name, Catalog.contract_id, Catalog.tu_code,
                              Catalog.address, Catalog.meter_id, Catalog.zone, MeterData.counter,
                              MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
-                             Catalog, MeterData.meter_id == Catalog.id).all()
-        data = pd.DataFrame(stmt)
-        data.to_excel('files\\upload.xlsx', index=False)
+            Catalog, MeterData.meter_id == Catalog.id).where(MeterData.counter_date.like(data))
+        datafr = pd.DataFrame(stmt)
+        datafr.to_excel('files\\upload.xlsx', index=False)
+        datafr = None
 
 
 def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
