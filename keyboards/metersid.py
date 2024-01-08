@@ -10,7 +10,8 @@ def metersid_kb(nomer) -> InlineKeyboardMarkup:
     if count == 0:
         builder.row(InlineKeyboardButton(text='Передайте информацию о счетчике администратору!', callback_data="0"))
         return builder.as_markup()
-    elif count < 7:
+    # elif count < 7:
+    else:
         for item in metersid:
             try:
                 lst = item[0].split(',')

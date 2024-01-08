@@ -66,7 +66,7 @@ async def agents_work(message: Message, state: FSMContext):
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                     f' нашел слишком много приборов учета c номером {message.text}')
     else:
-        await message.answer('Выберите действие', reply_markup=metersid_kb(message.text))
+        await message.answer('Выберите прибор учета:', reply_markup=metersid_kb(message.text))
         await state.set_state(Zone.meter_nomer)
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                     f' нашел номер прибора учета {message.text}')

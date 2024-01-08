@@ -4,8 +4,8 @@ import datetime
 from aiogram import Router, F, types, Bot
 from aiogram.client import bot
 from aiogram.fsm.context import FSMContext
-from database.db import session, get_admins, save_worker, get_data, get_meter_id, get_photo, delete_meter, change_meter, \
-    get_agents
+from database.db import session, get_admins, save_worker, get_data, get_meter_id, get_photo, delete_meter, \
+    change_meter, get_agents
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
@@ -243,7 +243,6 @@ async def update_data(message: Message, state: FSMContext):
     """Функция обработки нажатия на кнопку изменения ПУ в базы"""
     await state.update_data(upd_data=message.text)
     my_data = await state.get_data()
-    print(my_data['upd_number'], my_data['upd_cat'], my_data['upd_data'])
     res = change_meter(sesion=session, nomer=my_data['upd_number'], cat=my_data['upd_cat'], value=my_data['upd_data'])
     await message.answer(f'Изменено {res} записи')
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
