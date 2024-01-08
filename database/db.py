@@ -154,11 +154,11 @@ def load_data(filename: str, conn: connect) -> int:
         df.to_sql(name='catalogs', con=engine, if_exists='append', index=False)
         result = df.shape[0]
         print(result)
-        df = None
+        del df
         os.remove(filename)
         return result
     except:
-        df = None
+        del df
         os.remove(filename)
         return 0
 
@@ -179,7 +179,7 @@ def get_data(sesion: Session, data: str):
             Catalog, MeterData.meter_id == Catalog.id).where(MeterData.counter_date.like(data))
         datafr = pd.DataFrame(stmt)
         datafr.to_excel('files\\upload.xlsx', index=False)
-        datafr = None
+        del datafr
 
 
 def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
@@ -199,3 +199,48 @@ def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
             # my_photo.append(sesion.execute(stmt).all())
             my_photo.append(sesion.execute(stmt).all())
         return my_photo
+
+
+def delete_meter(sesion: Session, nomer: str):
+    """Функция удаляет прибор учета из базы данных
+                :param sesion - текущая сессия для работы с БД
+                :param nomer - номер прибора учета полностью
+                """
+    # session.query(Item).filter(Item.name.ilike("W%").delete(synchronize_session='fetch')
+    # session.commit()
+    with sesion as ses:
+        # for_del = sesion.query(Catalog).filter(Catalog.meter_id == nomer).all()
+        # for dl in for_del:
+        #     sesion.delete(dl)
+        #     sesion.commit()
+        sesion.query(Catalog).filter(Catalog.meter_id == nomer).delete()
+        sesion.commit()
+        # stmt = select(Catalog.id).where(Catalog.meter_id == nomer)
+        # for meter_id in sesion.scalars(stmt).fetchall():
+    # return res
+
+
+def change_meter(sesion: Session, nomer: str, cat: str, value: str):
+    """Функция изменяет данные прибора учета в базы данных
+                :param sesion - текущая сессия для работы с БД
+                :param nomer - номер прибора учета полностью
+                :param cat - метка данных для изменения (ФИО, адрес, номер л/с)
+                :param value - новое значение для прибора учета полностью
+                """
+    with sesion as ses:
+        changes = sesion.query(Catalog).filter(Catalog.meter_id == nomer).all()
+        for change in changes:
+            match cat:
+                case 'upd_name':
+                    change.name = value
+                    sesion.commit()
+                case 'upd_contract':
+                    change.contract_id = value
+                    sesion.commit()
+                case 'upd_type':
+                    change.meter_type = value
+                    sesion.commit()
+                case 'upd_address':
+                    change.address = value
+                    sesion.commit()
+    return len(changes)

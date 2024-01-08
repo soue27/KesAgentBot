@@ -4,7 +4,7 @@ import datetime
 from aiogram import Router, F, types, Bot
 from aiogram.client import bot
 from aiogram.fsm.context import FSMContext
-from database.db import session, get_admins, save_worker, get_data, get_meter_id, get_photo
+from database.db import session, get_admins, save_worker, get_data, get_meter_id, get_photo, delete_meter, change_meter
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
@@ -14,30 +14,40 @@ from aiogram.types.input_file import FSInputFile
 
 
 from filters.filters import IsAdmin
-from keyboards.adminkb import admin_kb, search_kb
+from keyboards.adminkb import admin_kb, search_kb, update_kb
 
 # Определение роутера для работы админа
 router = Router(name='admins')
 
 
-class Admin(StatesGroup):
+class Admin(StatesGroup):  # Стейт для ввода ай ди телеграмма для админа
     admin_id = State()
 
 
-class Agent(StatesGroup):
+class Agent(StatesGroup):  # Стейт для ввода ай ди телеграмма для агента
     agent_id = State()
 
 
-class ByNumber(StatesGroup):
+class ByNumber(StatesGroup):  # Стейт для ввода номера прибора учета для поиска фото
     number = State()
 
 
-class ByContract(StatesGroup):
+class ByContract(StatesGroup):  # Стейт для ввода номера договора для поиска фото
     contract = State()
 
 
-class UploadDate(StatesGroup):
+class UploadDate(StatesGroup):  # Стейт для ввода года и месяца для выгрузки показаний
     upload_date = State()
+
+
+class MeterDelete(StatesGroup):  # Стейт для ввода номера прибора учета для удаления
+    del_number = State()
+
+
+class MeterUpdate(StatesGroup):  # Стейт для ввода номера прибора учета для изменения
+    upd_number = State()
+    upd_cat = State()
+    upd_data = State()
 
 
 @router.message(Command("admin"), IsAdmin())
@@ -54,7 +64,7 @@ async def cmd_admin(message: Message):
 
 
 @router.callback_query(F.data == 'add_admin')
-async def func_name(callback: types.CallbackQuery, state: FSMContext):
+async def add_admin(callback: types.CallbackQuery, state: FSMContext):
     """Функция добавления номера ай ди админа"""
     await callback.message.delete()
     await callback.message.answer('Введите id администратора')
@@ -73,7 +83,7 @@ async def set_admin(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == 'add_agent')
-async def func_name(callback: types.CallbackQuery, state: FSMContext):
+async def add_agent(callback: types.CallbackQuery, state: FSMContext):
     """Функция добавления номера ай ди агента"""
     await callback.message.delete()
     await callback.message.answer('Введите id агента')
@@ -81,7 +91,7 @@ async def func_name(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.message(Agent.agent_id)
-async def set_admin(message: Message, state: FSMContext):
+async def set_agent(message: Message, state: FSMContext):
     """Функция добавления номера ай ди агента из стейта"""
     if message.text.isdigit():
         save_worker(sesion=session, idd=int(message.text), admin=False)
@@ -114,7 +124,7 @@ async def upload(callback: types.CallbackQuery, bot: Bot, state: FSMContext):
 
 
 @router.message(UploadDate.upload_date)
-async def set_admin(message: Message, state: FSMContext, bot: Bot):
+async def upload_dates(message: Message, state: FSMContext, bot: Bot):
     upload_date = message.text + "-%"
     get_data(session, upload_date)
     document = FSInputFile('files\\upload.xlsx')
@@ -125,7 +135,7 @@ async def set_admin(message: Message, state: FSMContext, bot: Bot):
 
 
 @router.callback_query(F.data == 'get_photo')
-async def func_name(callback: types.CallbackQuery, state: FSMContext):
+async def get_photo(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки нажатия на кнопку выгрузки фотографии"""
     await callback.message.delete()
     await callback.message.answer('Выберете как будем искать', reply_markup=search_kb())
@@ -133,7 +143,7 @@ async def func_name(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'by_number')
-async def func_name(callback: types.CallbackQuery, state: FSMContext):
+async def get_photo_bynumber(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки нажатия на кнопку поиска по номеру прибора учета"""
     await callback.message.delete()
     await callback.message.answer('Введите номер прибора учета')
@@ -141,7 +151,7 @@ async def func_name(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'by_contract')
-async def func_name(callback: types.CallbackQuery, state: FSMContext):
+async def get_photo_bycontract(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки нажатия на кнопку поиска по номеру договора"""
     await callback.message.delete()
     await callback.message.answer('Введите номер договора')
@@ -149,34 +159,102 @@ async def func_name(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.message(ByNumber.number)
-async def set_admin(message: Message, state: FSMContext, bot: Bot):
+async def upload_photo_bynumber(message: Message, state: FSMContext, bot: Bot):
     """Функция добавления номера прибора учета из стейта и поиск из базы данных"""
-    if message.text.isdigit():
-        spisok = get_photo(session, message.text, True)
-        for item in spisok:
-            if len(item) == 1:
-                await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
-            else:
-                for i in range(len(item)):
-                    await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
-            # await SendPhoto(chat_id=message.chat.id, photo='file_id', caption='Описание фотки')
-        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' выгрузил фотографии по номеру')
-        await message.answer('Это все что нашлось!')
-        await state.clear()
+    spisok = get_photo(session, message.text, True)
+    for item in spisok:
+        if len(item) == 1:
+            await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
+        else:
+            for i in range(len(item)):
+                await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
+        # await SendPhoto(chat_id=message.chat.id, photo='file_id', caption='Описание фотки')
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' выгрузил фотографии по номеру')
+    await message.answer('Это все что нашлось!')
+    await state.clear()
 
 
 @router.message(ByContract.contract)
-async def set_admin(message: Message, state: FSMContext, bot: Bot):
-    if message.text.isdigit():
-        spisok = get_photo(session, message.text, False)
-        for item in spisok:
-            if len(item) == 1:
-                await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
-            else:
-                for i in range(len(item)):
-                    await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
-        logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-                    f' выгрузил фотографии по номеру')
-        await message.answer('Это все что нашлось!')
-        await state.clear()
+async def upload_photo_bycontract(message: Message, state: FSMContext, bot: Bot):
+    spisok = get_photo(session, message.text, False)
+    for item in spisok:
+        if len(item) == 1:
+            await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
+        else:
+            for i in range(len(item)):
+                await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' выгрузил фотографии по номеру')
+    await message.answer('Это все что нашлось!')
+    await state.clear()
+
+
+@router.callback_query(F.data == 'delete')
+async def delete(callback: types.CallbackQuery, state: FSMContext):
+    """Функция обработки нажатия на кнопки удаления ПУ из базы"""
+    await callback.message.delete()
+    await callback.message.answer('Введите номер ПУ для удаления')
+    await state.set_state(MeterDelete.del_number)
+
+
+@router.message(MeterDelete.del_number)
+async def delete_bynumber(message: Message, state: FSMContext):
+    """Функция удаления ПУ из БД по номеру прибора учета из стейта"""
+    delete_meter(sesion=session, nomer=message.text)
+    await message.answer('Прибор учета удален')
+    # logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+    #             f' удалил прибор учета № {message.text}')
+    # await message.answer('агент добавлен')
+    await state.clear()
+
+
+@router.callback_query(F.data == 'update')
+async def update(callback: types.CallbackQuery, state: FSMContext):
+    """Функция обработки нажатия на кнопку изменения ПУ в базы"""
+    print('1')
+    await callback.message.delete()
+    await callback.message.answer('Введите номер прибора учета для изменения')
+    await state.set_state(MeterUpdate.upd_number)
+
+
+@router.message(MeterUpdate.upd_number)
+async def update_number(message: Message, state: FSMContext):
+    """Функция удаления ПУ из БД по номеру прибора учета из стейта"""
+    print('2', message.text)
+    await state.update_data(upd_number=message.text)
+    await message.answer('Выберете, что будем менять', reply_markup=update_kb())
+    await state.set_state(MeterUpdate.upd_cat)
+
+
+@router.callback_query(MeterUpdate.upd_cat)
+async def update_cat(callback: types.CallbackQuery, state: FSMContext):
+    """Функция обработки нажатия на кнопку изменения ПУ в базы"""
+    print('3', callback.data)
+    await callback.message.delete()
+    await state.update_data(upd_cat=callback.data)
+    await callback.message.answer('Введите данные для изменения')
+    await state.set_state(MeterUpdate.upd_data)
+
+
+@router.message(MeterUpdate.upd_data)
+async def update_data(message: Message, state: FSMContext):
+    """Функция обработки нажатия на кнопку изменения ПУ в базы"""
+    print('4', message.text)
+    await state.update_data(upd_data=message.text)
+    my_data = await state.get_data()
+    print(my_data['upd_number'], my_data['upd_cat'], my_data['upd_data'])
+    res = change_meter(sesion=session, nomer=my_data['upd_number'], cat=my_data['upd_cat'], value=my_data['upd_data'])
+    await message.answer(f'Изменено {res} записи')
+    await state.clear()
+
+# @router.message(MeterUpdate.upd_number)
+# async def delete_bynumber(message: Message, state: FSMContext):
+#     """Функция изменения ПУ в БД по номеру прибора учета из стейта"""
+#     my_data = message.text.split()
+#     change_meter(sesion=session, nomer=my_data[0], value=my_data[1])
+#     await message.answer('Прибор учета изменен')
+#     # logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+#     #             f' удалил прибор учета № {message.text}')
+#     # await message.answer('агент добавлен')
+#     await state.clear()
