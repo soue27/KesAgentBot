@@ -4,7 +4,8 @@ import datetime
 from aiogram import Router, F, types, Bot
 from aiogram.client import bot
 from aiogram.fsm.context import FSMContext
-from database.db import session, get_admins, save_worker, get_data, get_meter_id, get_photo, delete_meter, change_meter
+from database.db import session, get_admins, save_worker, get_data, get_meter_id, get_photo, delete_meter, change_meter, \
+    get_agents
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
@@ -48,6 +49,10 @@ class MeterUpdate(StatesGroup):  # Стейт для ввода номера п�
     upd_number = State()
     upd_cat = State()
     upd_data = State()
+
+
+class SengMessage(StatesGroup):  # Стейт для текста сообщения для рассылки
+    send_text = State()
 
 
 @router.message(Command("admin"), IsAdmin())
@@ -203,16 +208,14 @@ async def delete_bynumber(message: Message, state: FSMContext):
     """Функция удаления ПУ из БД по номеру прибора учета из стейта"""
     delete_meter(sesion=session, nomer=message.text)
     await message.answer('Прибор учета удален')
-    # logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-    #             f' удалил прибор учета № {message.text}')
-    # await message.answer('агент добавлен')
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' удалил прибор учета № {message.text}')
     await state.clear()
 
 
 @router.callback_query(F.data == 'update')
 async def update(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки нажатия на кнопку изменения ПУ в базы"""
-    print('1')
     await callback.message.delete()
     await callback.message.answer('Введите номер прибора учета для изменения')
     await state.set_state(MeterUpdate.upd_number)
@@ -221,7 +224,6 @@ async def update(callback: types.CallbackQuery, state: FSMContext):
 @router.message(MeterUpdate.upd_number)
 async def update_number(message: Message, state: FSMContext):
     """Функция удаления ПУ из БД по номеру прибора учета из стейта"""
-    print('2', message.text)
     await state.update_data(upd_number=message.text)
     await message.answer('Выберете, что будем менять', reply_markup=update_kb())
     await state.set_state(MeterUpdate.upd_cat)
@@ -230,7 +232,6 @@ async def update_number(message: Message, state: FSMContext):
 @router.callback_query(MeterUpdate.upd_cat)
 async def update_cat(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки нажатия на кнопку изменения ПУ в базы"""
-    print('3', callback.data)
     await callback.message.delete()
     await state.update_data(upd_cat=callback.data)
     await callback.message.answer('Введите данные для изменения')
@@ -240,21 +241,32 @@ async def update_cat(callback: types.CallbackQuery, state: FSMContext):
 @router.message(MeterUpdate.upd_data)
 async def update_data(message: Message, state: FSMContext):
     """Функция обработки нажатия на кнопку изменения ПУ в базы"""
-    print('4', message.text)
     await state.update_data(upd_data=message.text)
     my_data = await state.get_data()
     print(my_data['upd_number'], my_data['upd_cat'], my_data['upd_data'])
     res = change_meter(sesion=session, nomer=my_data['upd_number'], cat=my_data['upd_cat'], value=my_data['upd_data'])
     await message.answer(f'Изменено {res} записи')
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f" изменил данные прибора учета № {my_data['upd_number']} по категории {my_data['upd_cat']},"
+                f" на  {my_data['upd_data']}")
     await state.clear()
 
-# @router.message(MeterUpdate.upd_number)
-# async def delete_bynumber(message: Message, state: FSMContext):
-#     """Функция изменения ПУ в БД по номеру прибора учета из стейта"""
-#     my_data = message.text.split()
-#     change_meter(sesion=session, nomer=my_data[0], value=my_data[1])
-#     await message.answer('Прибор учета изменен')
-#     # logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-#     #             f' удалил прибор учета № {message.text}')
-#     # await message.answer('агент добавлен')
-#     await state.clear()
+
+@router.callback_query(F.data == 'send')
+async def send(callback: types.CallbackQuery, state: FSMContext):
+    """Функция обработки нажатия на кнопку отправки сообщения пользователям"""
+    await callback.message.delete()
+    await callback.message.answer('Введите текст сообщения для отправки')
+    await state.set_state(SengMessage.send_text)
+
+
+@router.message(SengMessage.send_text)
+async def send_message(message: Message, state: FSMContext, bot: Bot):
+    """Функция считывания текста и отправки сообщения пользователям"""
+    for worker in get_admins(sesion=session) + get_agents(sesion=session):
+        await bot.send_message(chat_id=int(worker), text=message.text)
+    await message.answer('Сообщение отправлено всем пользователям')
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' отправил сообщение пользователям {message.text}')
+    await state.clear()
+

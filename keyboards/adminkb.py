@@ -12,6 +12,7 @@ def admin_kb() -> InlineKeyboardMarkup:
     builder.row(InlineKeyboardButton(text='Сделать выгрузку за любой месяц', callback_data="upload"))
     builder.row(InlineKeyboardButton(text='Удалить прибор учета', callback_data="delete"))
     builder.row(InlineKeyboardButton(text='Изменить данные для прибора учета', callback_data="update"))
+    builder.row(InlineKeyboardButton(text='Отправить сообщение пользователям', callback_data="send"))
     return builder.as_markup(one_time_keyboard=True)
 
 

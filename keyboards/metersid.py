@@ -13,7 +13,11 @@ def metersid_kb(nomer) -> InlineKeyboardMarkup:
     elif count < 7:
         for item in metersid:
             try:
-                street = item[0].split('ул.')[1]
+                lst = item[0].split(',')
+                if 'кв.' in item[0]:
+                    street = lst[-3] + lst[-2] + lst[-1]
+                else:
+                    street = lst[-2] + lst[-1]
             except IndexError:
                 street = 'Без адреса'
             builder.row(InlineKeyboardButton(text=street + '  №' + item[1], callback_data=item[1]))

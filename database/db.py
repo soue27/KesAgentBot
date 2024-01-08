@@ -206,22 +206,13 @@ def delete_meter(sesion: Session, nomer: str):
                 :param sesion - текущая сессия для работы с БД
                 :param nomer - номер прибора учета полностью
                 """
-    # session.query(Item).filter(Item.name.ilike("W%").delete(synchronize_session='fetch')
-    # session.commit()
     with sesion as ses:
-        # for_del = sesion.query(Catalog).filter(Catalog.meter_id == nomer).all()
-        # for dl in for_del:
-        #     sesion.delete(dl)
-        #     sesion.commit()
         sesion.query(Catalog).filter(Catalog.meter_id == nomer).delete()
         sesion.commit()
-        # stmt = select(Catalog.id).where(Catalog.meter_id == nomer)
-        # for meter_id in sesion.scalars(stmt).fetchall():
-    # return res
 
 
-def change_meter(sesion: Session, nomer: str, cat: str, value: str):
-    """Функция изменяет данные прибора учета в базы данных
+def change_meter(sesion: Session, nomer: str, cat: str, value: str) -> int:
+    """Функция изменяет данные прибора учета в базы данных, возвращает количество изменных записей
                 :param sesion - текущая сессия для работы с БД
                 :param nomer - номер прибора учета полностью
                 :param cat - метка данных для изменения (ФИО, адрес, номер л/с)
