@@ -140,7 +140,7 @@ async def upload_dates(message: Message, state: FSMContext, bot: Bot):
 
 
 @router.callback_query(F.data == 'get_photo')
-async def get_photo(callback: types.CallbackQuery, state: FSMContext):
+async def upload_photo(callback: types.CallbackQuery, state: FSMContext):
     """Функция обработки нажатия на кнопку выгрузки фотографии"""
     await callback.message.delete()
     await callback.message.answer('Выберете как будем искать', reply_markup=search_kb())
