@@ -368,7 +368,7 @@ async def salesupload_dates(message: Message, state: FSMContext, bot: Bot):
 
 @router.callback_query(F.data == 'meter_info')
 async def get_info_bynumber(callback: types.CallbackQuery, state: FSMContext):
-    """Функция обработки нажатия на кнопку поиска по номеру прибора учета"""
+    """Функция обработки нажатия на кнопку получения информации по номеру прибора учета"""
     await callback.message.delete()
     await callback.message.answer('Введите номер ПУ, можно не полностью, \n'
                                   'для получения информации')
@@ -377,7 +377,7 @@ async def get_info_bynumber(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(MeterInfo.info_number)
 async def info_bynumber(message: Message, state: FSMContext):
-    """Функция удаления ПУ из БД по номеру прибора учета из стейта"""
+    """Функция для вывода информации о ПУ, по номеру"""
     scrolls = get_info_meters(sesion=session, nomer=message.text)
     for scroll in scrolls:
         await message.answer(f'<u>ФИО/Название:</u> <b>{scroll[0]}</b> \n'
@@ -385,4 +385,6 @@ async def info_bynumber(message: Message, state: FSMContext):
                              f'<u>Адрес:</u> <b>{scroll[3]}</b> \n'
                              f'<u>Тип:</u> <b>{scroll[4]}</b> \n'
                              f'<u>Номер:</u> <b>{scroll[5]}</b>')
+    logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                f' получил информацию о ПУ № {message.text}')
     await state.clear()
