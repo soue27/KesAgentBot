@@ -6,7 +6,7 @@ def main_kb() -> InlineKeyboardMarkup:
     """Функция создания главной клавиатуры для выбора процесса работы бота"""
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text='Персонал', callback_data="staff"))
-    builder.row(InlineKeyboardButton(text='Выгрузки показаний', callback_data="uploads"))
+    builder.row(InlineKeyboardButton(text='Выгрузка показаний', callback_data="uploads"))
     builder.row(InlineKeyboardButton(text='Найти фото прибора учета', callback_data="get_photo"))
     builder.row(InlineKeyboardButton(text='Операции с приборами учета', callback_data="meter_ops"))
     builder.row(InlineKeyboardButton(text='Резерв', callback_data="reserve1"))
@@ -19,7 +19,7 @@ def staff_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text='Добавить агента', callback_data="add_agent"))
     builder.row(InlineKeyboardButton(text='Добавить администратора', callback_data="add_admin"))
-    builder.row(InlineKeyboardButton(text='Посмотреть всех', callback_data="wiew_staff"))
+    builder.row(InlineKeyboardButton(text='Посмотреть всех', callback_data="view_staff"))
     builder.row(InlineKeyboardButton(text='Отправить сообщение пользователям', callback_data="send"))
     builder.row(InlineKeyboardButton(text='Удалить работника', callback_data="del_staff"))
     return builder.as_markup(one_time_keyboard=True)
@@ -29,8 +29,9 @@ def uploads_kb() -> InlineKeyboardMarkup:
     """Функция создания  клавиатуры для проведения выгрузок"""
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text='Сделать текущую выгрузку', callback_data="current_upload"))
-    builder.row(InlineKeyboardButton(text='Сделать текущую выгрузка для сбыта', callback_data="sale_upload"))
     builder.row(InlineKeyboardButton(text='Сделать выгрузку за любой месяц', callback_data="upload"))
+    builder.row(InlineKeyboardButton(text='Сделать текущую выгрузка для сбыта', callback_data="sale_currentupload"))
+    builder.row(InlineKeyboardButton(text='Сделать выгрузкe для сбыта за любой месяц', callback_data="sale_upload"))
     return builder.as_markup(one_time_keyboard=True)
 
 

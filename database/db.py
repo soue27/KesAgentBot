@@ -162,11 +162,12 @@ def load_data(filename: str, conn: connect) -> int:
         return 0
 
 
-def get_data(sesion: Session, data: str):
-    """Функция производит выгрузку данных из базы данных для текущкего
+def get_data(sesion: Session, data: str, for_sales: bool) -> None:
+    """Функция производит выгрузку данных из базы данных для
     месяца года для передачи в сбыт и расчетам с агентами
                 :param sesion - текущая сессия для работы с БД
-                :param data str - строка представления года и месяца"""
+                :param data str - строка представления года и месяца
+                :param for_sales - если True, то выгрузка для сбыта"""
     with sesion as ses:
         # stmt = session.query(Worker.id, Worker.tg_id, Catalog.name, Catalog.contract_id, Catalog.tu_code,
         #                      Catalog.address, Catalog.meter_id, Catalog.zone, MeterData.counter,
@@ -177,8 +178,16 @@ def get_data(sesion: Session, data: str):
                              MeterData.counter_date).join(MeterData, Worker.id == MeterData.agent_id).join(
             Catalog, MeterData.meter_id == Catalog.id).where(MeterData.counter_date.like(data))
         datafr = pd.DataFrame(stmt)
-        datafr.to_excel('files\\upload.xlsx', index=False)
-        del datafr
+        if not for_sales:
+            datafr.to_excel('files\\upload.xlsx', index=False)
+            del datafr
+        else:
+            df1 = datafr.loc[datafr['zone'] == "День"]
+            df2 = datafr.loc[datafr['zone'] == "Ночь"]
+            df3 = df1.merge(df2, on=['meter_id'])
+            df4 = datafr.loc[datafr['zone'] == "Кр/сут"]
+            df5 = pd.concat([df3, df4], ignore_index=True)
+            df5.to_excel('files\\upload.xlsx', index=False)
 
 
 def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
@@ -234,3 +243,35 @@ def change_meter(sesion: Session, nomer: str, cat: str, value: str) -> int:
                     change.address = value
                     sesion.commit()
     return len(changes)
+
+
+def get_staff(sesion: Session) -> None:
+    """Функция для получения всех агентов и администраторов бота
+            :param sesion - текущая сессия для работы с БД
+            """
+    with sesion as ses:
+        stmt = sesion.query("*").select_from(Worker)
+        datafr = pd.DataFrame(stmt)
+        datafr.to_excel('files\\staff.xlsx', index=False)
+        del datafr
+        sesion.commit()
+
+
+def del_staff(sesion: Session, idd: int) -> None:
+    """Функция для получения всех агентов и администраторов бота
+            :param sesion - текущая сессия для работы с БД
+            :param idd - ай ди номер работника
+            """
+    with sesion as ses:
+        sesion.query(Worker).filter(Worker.tg_id == idd).delete()
+        sesion.commit()
+
+
+def get_info_meters(sesion: Session, nomer: str) -> Any:
+    """Функция возвращает информацию о приборе учета по введенному номеру
+                :param sesion - текущая сессия для работы с БД
+                :param nomer - номер прибора учета полностью или частично
+                """
+    with sesion as ses:
+        stmt = select("*").select_from(Catalog).where(Catalog.meter_id.contains(nomer))
+        return sesion.execute(stmt).unique()
