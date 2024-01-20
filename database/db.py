@@ -149,8 +149,7 @@ def load_data(filename: str, conn: connect) -> int:
             :param filename - полное имя файла excel для загрузки данных
             :param conn - connection к базе данных"""
     try:
-        df = pd.read_excel(filename)
-        print(df)
+        df = pd.read_excel(filename, dtype=str)
         df.to_sql(name='catalogs', con=engine, if_exists='append', index=False)
         result = df.shape[0]
         print(result)

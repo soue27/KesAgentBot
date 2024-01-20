@@ -15,7 +15,7 @@ from aiogram.types.input_file import FSInputFile
 
 
 from filters.filters import IsAdmin
-from keyboards.adminkb import admin_kb, search_kb, update_kb
+from keyboards.adminkb import admin_kb, search_kb, update_kb, main_kb, meterops_kb, uploads_kb, staff_kb
 
 # Определение роутера для работы админа
 router = Router(name='admins')
@@ -59,13 +59,34 @@ class SengMessage(StatesGroup):  # Стейт для текста сообщен
 async def cmd_admin(message: Message):
     """функция обработки команды admin"""
     # if message.from_user.id in set(get_admins(session)):
-    await message.answer("Выберите действие", reply_markup=admin_kb())
+    await message.answer("Выберите действие", reply_markup=main_kb())
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' зашел как админ')
     # else:
     #     await message.answer("Вы не являетесь администратором")
     #     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
     #                 f' попытался зайти как админ')
+
+
+@router.callback_query(F.data == 'staff')
+async def staff(callback: types.CallbackQuery):
+    """Функция обработки нажатия кнопки Персонала и вывод меню работы с персоналом"""
+    await callback.message.delete()
+    await callback.message.answer('Выберете категорию', reply_markup=staff_kb())
+
+
+@router.callback_query(F.data == 'uploads')
+async def uploads(callback: types.CallbackQuery):
+    """Функция обработки нажатия кнопки Выгрузки и вывод меню работы с выгрузками"""
+    await callback.message.delete()
+    await callback.message.answer('Выберете категорию', reply_markup=uploads_kb())
+
+
+@router.callback_query(F.data == 'meter_ops')
+async def meter_ops(callback: types.CallbackQuery):
+    """Функция обработки нажатия кнопки Операции с ПУ и вывод меню работы с ПУ"""
+    await callback.message.delete()
+    await callback.message.answer('Выберете категорию', reply_markup=meterops_kb())
 
 
 @router.callback_query(F.data == 'add_admin')

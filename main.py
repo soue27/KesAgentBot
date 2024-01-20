@@ -7,11 +7,12 @@ from handlers import user_start, load_data, agents, user, admins
 
 
 async def main():
+    print(TOKEN)
     logging.basicConfig(level=logging.DEBUG)
     logger.add("debug.log", format="{time} {level} {message}",
                level="DEBUG", rotation="1 week", compression="zip")
     dp = Dispatcher()
-    bot = Bot(TOKEN, parse_mode="HTML")
+    bot = Bot(token=TOKEN, parse_mode="HTML")
     dp.include_router(load_data.router)
     dp.include_router(agents.router)
     dp.include_router(admins.router)
