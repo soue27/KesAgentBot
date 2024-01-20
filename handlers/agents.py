@@ -190,12 +190,3 @@ async def save_lost_data(message: Message, state: FSMContext, bot: Bot):
     await state.clear()
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' передал потерянный счетчик админу {data}')
-    # if save_lost(session, data=data):
-    #     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-    #                 f' добавил потерянный счетчик {data}')
-    #     await message.answer('Счетчик записан в базу данных для поиска')
-    #     await state.clear()
-    # else:
-    #     await message.answer('Какая то ошибка в данных, попробуйте еще раз')
-    #     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
-    #                 f' ошибся в данных при вводе потеряшки {data}')
