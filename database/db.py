@@ -258,7 +258,7 @@ def get_staff(sesion: Session) -> None:
 
 
 def del_staff(sesion: Session, idd: int) -> None:
-    """Функция для получения всех агентов и администраторов бота
+    """Функция для удаления работника из базы данных по id
             :param sesion - текущая сессия для работы с БД
             :param idd - ай ди номер работника
             """
