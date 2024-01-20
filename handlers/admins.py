@@ -305,7 +305,7 @@ async def send_message(message: Message, state: FSMContext, bot: Bot):
 
 @router.callback_query(F.data == 'view_staff')
 async def current_upload(callback: types.CallbackQuery, bot: Bot):
-    """Функция для выгрузки файлов с показаниями"""
+    """Функция для выгрузки файла с работниками"""
     await callback.answer('Файл готов')
     get_staff(sesion=session)
     document = FSInputFile('files\\staff.xlsx')
@@ -325,7 +325,7 @@ async def delete_staff(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(DeleteStaff.delete_id)
 async def delete_staffdo(message: Message, state: FSMContext):
-    """Функция удаления работника из базы данныз"""
+    """Функция удаления работника из базы данных"""
     del_staff(sesion=session, idd=int(message.text))
     await message.answer('Работник удален')
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
@@ -335,7 +335,7 @@ async def delete_staffdo(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == 'sale_currentupload')
 async def current_uploadsales(callback: types.CallbackQuery, bot: Bot):
-    """Функция для выгрузки файлов с показаниями"""
+    """Функция для выгрузки файла с текущими показаниями для сбыта"""
     await callback.answer('Файл готов')
     data = str(datetime.date.today().year) + "-" + str(datetime.date.today().month).zfill(2) + "-%"
     get_data(session, data, True)
@@ -348,7 +348,7 @@ async def current_uploadsales(callback: types.CallbackQuery, bot: Bot):
 
 @router.callback_query(F.data == 'sale_upload')
 async def sales_upload(callback: types.CallbackQuery, bot: Bot, state: FSMContext):
-    """Функция для выгрузки файлов с показаниями"""
+    """Функция обработки нажатия меню Выгрузка для сбыта"""
     await callback.message.delete()
     await callback.message.answer('Введите год и месяц в формате: \n'
                                   '2023-11,\n для выгрузки за ноябрь 2023г.')
@@ -357,6 +357,7 @@ async def sales_upload(callback: types.CallbackQuery, bot: Bot, state: FSMContex
 
 @router.message(SalesUploadDate.upload_date)
 async def salesupload_dates(message: Message, state: FSMContext, bot: Bot):
+    """Функция форммирования выгрузки в формате сбыта"""
     upload_date = message.text + "-%"
     get_data(session, upload_date, True)
     document = FSInputFile('files\\upload.xlsx')
