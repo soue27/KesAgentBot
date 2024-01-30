@@ -5,6 +5,7 @@ from database.db import session, get_admins, get_agents
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 
+from keyboards.userkb import user_kb
 
 # Определение роутера для команды старт
 router = Router(name='user_start')
@@ -18,4 +19,5 @@ async def command_start(message: Message):
     elif message.from_user.id in list(get_agents(session)):
         await message.answer('Вы агент.\nВведите номер прибора учета(можно не полностью)')
     else:
-        await message.answer('Вы потребитель электрической энергии \nВведите номер лицевого счета')
+        await message.answer('Вы потребитель электрической энергии \n'
+                             'Введите номер лицевого счета', reply_markup=user_kb())

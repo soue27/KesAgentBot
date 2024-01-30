@@ -182,10 +182,10 @@ def get_data(sesion: Session, data: str, for_sales: bool) -> None:
             datafr.to_excel('files\\upload.xlsx', index=False)
             del datafr
         else:
-            df1 = datafr.loc[datafr['zone'] == "День"]
-            df2 = datafr.loc[datafr['zone'] == "Ночь"]
+            df1 = datafr.loc[datafr['zone'].str.lower() == "день"]
+            df2 = datafr.loc[datafr['zone'].str.lower() == "ночь"]
             df3 = df1.merge(df2, on=['meter_id'])
-            df4 = datafr.loc[datafr['zone'] == "Кр/сут"]
+            df4 = datafr.loc[datafr['zone'].str.lower() == "кр/сут"]
             df5 = pd.concat([df3, df4], ignore_index=True)
             df5.to_excel('files\\upload.xlsx', index=False)
 
@@ -275,3 +275,27 @@ def get_info_meters(sesion: Session, nomer: str) -> Any:
     with sesion as ses:
         stmt = select("*").select_from(Catalog).where(Catalog.meter_id.contains(nomer))
         return sesion.execute(stmt).unique()
+
+# Раздел для работы с таблицей показаний, полученных от потребителей
+
+
+def get_meterid_bycontract(sesion: Session, contract: str) -> any:
+    """Функция возвращает ай ди счетчиков результат поиска по номеру договора
+                :param sesion - текущая сессия для работы с БД
+                :param contract - номер прибора учета полностью или частично
+                """
+    with sesion as ses:
+        count = 0
+        stmt = select(Catalog.contract_id, Catalog.meter_id).select_from(Catalog).where(Catalog.contract_id == contract)
+        stmt1 = select(Catalog.id, Catalog.zone).select_from(Catalog).where(Catalog.contract_id == contract)
+        for item in sesion.execute(stmt).unique():
+            count += 1
+        return sesion.execute(stmt).all(), count
+
+        # with sesion as ses:
+        #     stmt = select(Catalog.address, Catalog.meter_id).select_from(Catalog).where(
+        #         Catalog.meter_id.contains(nomer))
+        #     count = 0
+        #     for item in sesion.execute(stmt).unique():
+        #         count += 1
+        #     return sesion.execute(stmt).unique(), count

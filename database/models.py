@@ -37,6 +37,7 @@ class Catalog(Base):
     zone: Mapped[str | None] = mapped_column(String(10), nullable=True)
     # Связи с другими таблицами
     metersdates: Mapped[list['MeterData']] = relationship(back_populates='catalog')
+    userdates: Mapped[list['UserData']] = relationship(back_populates='catalog')
 
     def __str__(self):
         return (f'Catalog(id={self.id!r}, name={self.name}, contract_id={self.contract_id},'
@@ -79,6 +80,28 @@ class LostMeter(Base):
     def __str__(self):
         return (f'LostMeter(id={self.id!r}, meter_id={self.meter_id!r}, counter={self.counter1!r}, '
                 f' counter={self.counter2!r}, counter={self.counter3!r},counter_date:={self.counter_date:!r},')
+
+    def __repr__(self) -> str:
+        return str(self)
+
+
+class UserData(Base):
+    """Класс для описания сбора показаний от потребителей"""
+    __tablename__ = 'userdates'
+    tg_id: Mapped[int] = mapped_column(Integer)
+    tg_firstname: Mapped[str] = mapped_column(String(20))
+    tg_lastname: Mapped[str] = mapped_column(String(20))
+    meter_id: Mapped[int] = mapped_column(ForeignKey('catalogs.id'))
+    counter: Mapped[str] = mapped_column(String(20))
+    counter_date: Mapped[Date] = mapped_column(Date, default=datetime.date.today())
+    photo_id: Mapped[str] = mapped_column(String(100), nullable=True)
+    # Связи с другими таблицами
+    catalog: Mapped['Catalog'] = relationship(back_populates='userdates')
+
+    def __str__(self):
+        return (f'UserData(id={self.id!r}, tg_id={self.tg_id!r}, tg_firstname={self.tg_firstname!r},'
+                f' tg_lastname={self.tg_lastname!r}, meter_id={self.meter_id!r}, '
+                f' counter={self.counter!r}, counter_date:={self.counter_date:!r}, photo_id={self.photo_id!r},')
 
     def __repr__(self) -> str:
         return str(self)
