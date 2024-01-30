@@ -8,4 +8,3 @@ def user_kb() -> InlineKeyboardMarkup:
     builder.row(InlineKeyboardButton(text='Передать показания', callback_data="user_counter"))
     builder.row(InlineKeyboardButton(text='Передать показания с фото', callback_data="user_counterphoto"))
     return builder.as_markup(one_time_keyboard=True)
-
