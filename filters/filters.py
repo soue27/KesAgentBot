@@ -17,3 +17,13 @@ class IsAdmin(BaseFilter):
             return True
         else:
             return False
+
+
+class IsMyDigit(BaseFilter):
+    async def __call__(self, message: Message):
+        if message.text is None:
+            return False
+        if any(map(str.isdigit, message.text)):
+            return True
+        else:
+            return False

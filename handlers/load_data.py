@@ -19,6 +19,7 @@ async def load_dates(message: Message, bot: Bot):
     file = await bot.get_file(file_id=file_id)
     file_path = file.file_path
     await bot.download_file(file_path, "files\\forload.xlsx")
+    print("файл получен")
     result = load_data("files\\forload.xlsx", connect)
     await message.answer(f'Загружено {result} строк')
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'

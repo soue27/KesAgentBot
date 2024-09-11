@@ -200,13 +200,16 @@ async def get_photo_bycontract(callback: types.CallbackQuery, state: FSMContext)
 async def upload_photo_bynumber(message: Message, state: FSMContext, bot: Bot):
     """Функция добавления номера прибора учета из стейта и поиск из базы данных"""
     spisok = get_photo(session, message.text, True)
+    print(spisok)
     for item in spisok:
         if len(item) == 1:
             await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
         else:
             for i in range(len(item)):
-                await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
-        # await SendPhoto(chat_id=message.chat.id, photo='file_id', caption='Описание фотки')
+                if item[i][0] is None:
+                    await message.answer('Фото нет, какая то ошибка')
+                else:
+                    await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[i][1]))
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' выгрузил фотографии по номеру')
     await message.answer('Это все что нашлось!')
@@ -221,7 +224,7 @@ async def upload_photo_bycontract(message: Message, state: FSMContext, bot: Bot)
             await bot.send_photo(chat_id=message.chat.id, photo=item[0][0], caption=str(item[0][1]))
         else:
             for i in range(len(item)):
-                await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[0][1]))
+                await bot.send_photo(chat_id=message.chat.id, photo=item[i][0], caption=str(item[i][1]))
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' выгрузил фотографии по номеру')
     await message.answer('Это все что нашлось!')
@@ -380,12 +383,16 @@ async def get_info_bynumber(callback: types.CallbackQuery, state: FSMContext):
 async def info_bynumber(message: Message, state: FSMContext):
     """Функция для вывода информации о ПУ, по номеру"""
     scrolls = get_info_meters(sesion=session, nomer=message.text)
-    for scroll in scrolls:
-        await message.answer(f'<u>ФИО/Название:</u> <b>{scroll[0]}</b> \n'
-                             f'<u>Номер договора/л.с:</u> <b>{scroll[1]}</b> \n'
-                             f'<u>Адрес:</u> <b>{scroll[3]}</b> \n'
-                             f'<u>Тип:</u> <b>{scroll[4]}</b> \n'
-                             f'<u>Номер:</u> <b>{scroll[5]}</b>')
+    if len(scrolls) == 0:
+        await message.answer(f'<b>Счечтчик с номером {message.text} не найден</b>')
+    else:
+        for scroll in scrolls:
+            await message.answer(f'<u>ФИО/Название:</u> <b>{scroll[0]}</b> \n'
+                                 f'<u>Номер договора/л.с:</u> <b>{scroll[1]}</b> \n'
+                                 f'<u>Адрес:</u> <b>{scroll[3]}</b> \n'
+                                 f'<u>Тип:</u> <b>{scroll[4]}</b> \n'
+                                 f'<u>Номер:</u> <b>{scroll[5]}</b> \n'
+                                 f'<u>Тариф:</u> <b>{scroll[6]}</b>')
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' получил информацию о ПУ № {message.text}')
     await state.clear()

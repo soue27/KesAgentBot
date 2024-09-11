@@ -3,7 +3,7 @@ import datetime
 import os
 from typing import Any
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, desc
 from sqlalchemy.orm import Session, aliased
 from database.models import Base, Worker, Catalog, MeterData, LostMeter
 from data.config import DB_URL, ECHO
@@ -67,7 +67,7 @@ def find_meter_by_nomer(sesion: Session, nomer: str) -> Any:
         count = 0
         for item in sesion.execute(stmt).unique():
             count += 1
-        return sesion.execute(stmt).unique(), count
+        return sesion.execute(stmt).unique().all(), count
 
 
 def get_meter_id(sesion: Session, nomer: str) -> any:
@@ -157,7 +157,7 @@ def load_data(filename: str, conn: connect) -> int:
         os.remove(filename)
         return result
     except:
-        del df
+        #del df
         os.remove(filename)
         return 0
 
@@ -203,8 +203,8 @@ def get_photo(sesion: Session, nomer: str, isnomer: bool) -> list:
         else:
             stmt = select(Catalog.id).where(Catalog.contract_id == nomer)
         for nomer in sesion.scalars(stmt).fetchall():
-            stmt = select(MeterData.photo_id, MeterData.counter_date).select_from(MeterData).where(MeterData.meter_id == nomer)
-            # my_photo.append(sesion.execute(stmt).all())
+            stmt = select(MeterData.photo_id, MeterData.counter_date).select_from(MeterData).where(
+                MeterData.meter_id == nomer).order_by(desc(MeterData.counter_date))
             my_photo.append(sesion.execute(stmt).all())
         return my_photo
 
@@ -274,7 +274,7 @@ def get_info_meters(sesion: Session, nomer: str) -> Any:
                 """
     with sesion as ses:
         stmt = select("*").select_from(Catalog).where(Catalog.meter_id.contains(nomer))
-        return sesion.execute(stmt).unique()
+        return sesion.execute(stmt).all()
 
 # Раздел для работы с таблицей показаний, полученных от потребителей
 

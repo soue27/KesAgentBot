@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
 
-from filters.filters import IsAgent
+from filters.filters import IsAgent, IsMyDigit
 from keyboards.metersid import metersid_kb
 
 # Определение роутера для работы агента
@@ -56,17 +56,29 @@ async def incorrect_photo3(message: Message):
     logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                 f' ошибся в вводе фотографии, подпись {message.caption}')
 
+# F.text.isdigit()
 
-@router.message(F.text.isdigit(), IsAgent())
+
+@router.message(IsMyDigit(), IsAgent())
 async def agents_work(message: Message, state: FSMContext):
     """Функция обработки ввода номера ПУ"""
     metersid, count = find_meter_by_nomer(session, message.text)
     if count > 7:
-        await message.answer('найдено более 7 приборов учета \n Введите больше цифр номера')
+        for i in metersid:
+            if len(i[1]) == len(message.text):
+                y = list(i)
+                await message.answer('Выберите прибор учета:', reply_markup=metersid_kb(y, 1))
+                await state.set_state(Zone.meter_nomer)
+                logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
+                            f' нашел номер прибора учета {message.text}')
+                break
+        else:
+            await message.answer('найдено более 7 приборов учета \n Введите больше цифр номера')
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                     f' нашел слишком много приборов учета c номером {message.text}')
     else:
-        await message.answer('Выберите прибор учета:', reply_markup=metersid_kb(message.text))
+        print(type(metersid), '****')
+        await message.answer('Выберите прибор учета:', reply_markup=metersid_kb(metersid, count))
         await state.set_state(Zone.meter_nomer)
         logger.info(f'{message.from_user.first_name} {message.from_user.last_name} {message.from_user.id}'
                     f' нашел номер прибора учета {message.text}')
